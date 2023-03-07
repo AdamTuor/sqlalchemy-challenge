@@ -1,5 +1,3 @@
-import numpy as np
-
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
@@ -41,10 +39,10 @@ def welcome():
     return (
         f"Available Routes:<br/>"
         f"/api/v1.0/precipitation<br/>"
-        f"/api/v1.0/stations"
-        f"/api/v1.0/tobs"
-        f"/api/v1.0/<start>"
-        f"/api/v1.0/<start>/<end>"
+        f"/api/v1.0/stations<br/>"
+        f"/api/v1.0/tobs<br/>"
+        f"/api/v1.0/start<start><br/>"
+        f"/api/v1.0/start<start>/end<end><br/>"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -56,12 +54,12 @@ def precipitation():
     # Calculate the date one year from the last date in data set.
     prev_year = dt.date(2017, 8, 23) - dt.timedelta(days=365)
 
-    # Perform a query to retrieve the data and precipitation scores
+    # Perform a query to retrieve the data and precipitation scores.
     results = session.query(measurement.date, measurement.prcp).filter(measurement.date >= prev_year).all()
     session.close()
 
     one_year = []
-
+    # Loop through results to create a dictionary and add it to one_year list.
     for date, prcp in results:
         year_dict={}
         year_dict['date']= date
@@ -74,13 +72,13 @@ def precipitation():
 @app.route("/api/v1.0/stations")
 def stations_list():
     """Return a list of stations"""
-    
+    # Perform query to retrieve all stations.
     session = Session(engine)
     stations =session.query(measurement.station).group_by(measurement.station)
     session.close()
 
     all_stations= []
-
+    # Loop through stations to create a dictionary and add it to all_stations list.
     for station in stations:
         station_dict = {}
         station_dict['station']=station[0]
@@ -92,13 +90,13 @@ def stations_list():
 def tobs():
     """Return the dates and temperature observations of the most-active station for the previous year of data."""
 
-    
+    # Perform query to retrieve dates and weather observations for the most active station.
     session = Session(engine)
     tobs_data = session.query(measurement.date, measurement.tobs).filter(measurement.station == 'USC00519281')
     session.close()
 
     tobs_list = []
-
+    # Loop through tobs_data to create a dictionary and add it to tobs_list.
     for date, tobs in tobs_data:
         tobs_dict={}
         tobs_dict['date']=date
@@ -109,14 +107,14 @@ def tobs():
 @app.route("/api/v1.0/<start>")
 def start_date_only(start):
     """Return a JSON list of the minimum temperature, the average temperature, and the maximum temperature for a specified start date"""
-    
+       
     session = Session(engine)
-
+    # Perform query for specified start date and return min, max, avg temperature.
     start_date_data = session.query(func.min(measurement.tobs),func.max(measurement.tobs),func.avg(measurement.tobs)).filter(measurement.date >= start)
     session.close()
-    
+     
     start_date_list = []
-    
+    # Loop through start_date_data to create a dictionary and add it to start_date_list.
     for data in start_date_data:
         start_date_dict={}
         start_date_dict['min temp'] = data[0]
@@ -128,13 +126,14 @@ def start_date_only(start):
 @app.route("/api/v1.0/<start>/<end>")
 def start_end(start,end):
     """Return a JSON list of the minimum temperature, the average temperature, and the maximum temperature for a specified start-end range."""
-    
+       
     session = Session(engine)
+    # Perform query for specified start/end dates and return min, max, avg temperature.
     start_end_date_data = session.query(func.min(measurement.tobs),func.max(measurement.tobs),func.avg(measurement.tobs)).filter(measurement.date >= start).filter(measurement.date <= end)
     session.close()
-
+        
     start_end_list=[]
-
+    # Loop through start_end_date_data to create a dictionary and add it to start_end_list.
     for data in start_end_date_data:
         start_end_dict={}
         start_end_dict['min temp'] = data[0]
